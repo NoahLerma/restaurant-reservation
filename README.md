@@ -33,6 +33,9 @@ npm install
 
 ### 3. Set Up Environment Variables
 Create a `.env` file in the root directory with the following (example for SQLite):
+
+SWLite is fine for this since it will not be published to a production environment leave .env as is
+
 ```
 DATABASE_URL="file:./prisma/dev.db"
 NEXTAUTH_SECRET="your-random-secret"
@@ -59,6 +62,7 @@ Visit [http://localhost:3001](http://localhost:3001) in your browser.
   - **Email:** `admin@fibonaccisflame.com`
   - **Password:** `admin`
 - Log in and access the Admin Dashboard from the navigation menu.
+- Feel free to register a new account and verify that it cannot access admin tools and can also make resrvations.
 
 ## Environment Variables
 - `DATABASE_URL` - Connection string for your database
