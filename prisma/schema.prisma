@@ -1,0 +1,117 @@
+// This is your Prisma schema file
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String
+  name         String
+  phone        String
+  isGuest      Boolean       @default(false)
+  earnedPoints Int          @default(0)
+  isAdmin      Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+  mailingAddress Address?    @relation("MailingAddress")
+  billingAddress Address?    @relation("BillingAddress")
+  // NextAuth.js fields
+  accounts     Account[]
+  sessions     Session[]
+}
+
+// NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Address {
+  id               String  @id @default(cuid())
+  street           String
+  city             String
+  state            String
+  zipCode          String
+  userMailingId    String? @unique
+  userBillingId    String? @unique
+  userMailing      User?   @relation("MailingAddress", fields: [userMailingId], references: [id])
+  userBilling      User?   @relation("BillingAddress", fields: [userBillingId], references: [id])
+}
+
+model Table {
+  id          String        @id @default(cuid())
+  tableNumber Int          @unique
+  capacity    Int
+  isAvailable Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  reservations Reservation[]
+}
+
+model Reservation {
+  id            String    @id @default(cuid())
+  date          DateTime
+  numberOfGuests Int
+  status        String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  userId        String
+  tableId       String
+  holdingFeeStatus String @default("NOT_REQUIRED") // NOT_REQUIRED, REQUIRED, PAID
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id])
+  table         Table     @relation(fields: [tableId], references: [id])
+  creditCard    CreditCard?
+}
+
+model CreditCard {
+  id            String      @id @default(cuid())
+  lastFourDigits String
+  expiryMonth   Int
+  expiryYear    Int
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+model HighTrafficDate {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  description String?
+} 

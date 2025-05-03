@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Calendar style overrides for react-calendar */
+.react-calendar__navigation button,
+.react-calendar__month-view__weekdays,
+.react-calendar__month-view__days__day,
+.react-calendar__tile {
+  color: #1a202c !important; /* Tailwind's text-gray-900 */
+  font-weight: 500;
+}
+.react-calendar__tile--active {
+  background: #f59e42 !important; /* amber-400 */
+  color: #fff !important;
+}
+.react-calendar__tile--now {
+  background: #fde68a !important; /* amber-200 */
+  color: #92400e !important;
+}
+.react-calendar__navigation button:disabled {
+  color: #a0aec0 !important; /* gray-400 */
+}
+.react-calendar__month-view__weekdays__weekday {
+  color: #92400e !important; /* amber-800 */
+}
