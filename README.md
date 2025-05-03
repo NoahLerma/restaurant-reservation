@@ -18,6 +18,14 @@ A modern, full-featured restaurant reservation system built with Next.js (App Ro
 - **Styling:** Tailwind CSS
 - **Database:** SQLite (development) / PostgreSQL, MySQL, or other (production)
 
+## Prerequisites
+Before you begin, ensure you have the following installed:
+- [Node.js](https://nodejs.org/) (version 18 or higher)
+- [npm](https://www.npmjs.com/) (comes with Node.js) or [Yarn](https://yarnpkg.com/)
+- [Git](https://git-scm.com/) for version control
+- A code editor (e.g., [VS Code](https://code.visualstudio.com/))
+- For production deployment: A database service (PostgreSQL recommended)
+
 ## Getting Started
 
 ### 1. Clone the Repository
