@@ -22,7 +22,7 @@ A modern, full-featured restaurant reservation system built with Next.js (App Ro
 
 ### 1. Clone the Repository
 ```bash
- git clone <your-repo-url>
+ git clone <https://github.com/NoahLerma/restaurant-reservation.git>
  cd restaurant-reservation
 ```
 
