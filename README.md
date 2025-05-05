@@ -37,6 +37,14 @@ Before you begin, ensure you have the following installed:
 ### 2. Install Dependencies
 ```bash
 npm install
+
+
+#update npm to the latest version
+npm install -g npm@11.3.0
+
+#you may need to re-install npm to get updated dependencies the terminal will let you know
+npm audit fix --force
+
 ```
 
 ### 3. Set Up Environment Variables
@@ -60,7 +68,12 @@ npx prisma generate
 # Create and apply migrations
 npx prisma migrate dev --name init
 
+# you will get a migrate error and will need to reset the database to migrate it properly
+npx prisma migrate reset
+# type y for yes to wipe and reset database
+
 # Seed the database with initial data
+# this should run automatically
 npx prisma db seed
 ```
 - This will create the database schema and seed an admin user and sample tables.
@@ -76,7 +89,7 @@ Visit [http://localhost:3001](http://localhost:3001) in your browser.
   - **Email:** `admin@fibonaccisflame.com`
   - **Password:** `admin`
 - Log in and access the Admin Dashboard from the navigation menu.
-- Feel free to register a new account and verify that it cannot access admin tools and can also make resrvations.
+- Feel free to register a new account and verify that it cannot access admin tools and can also make reservations.
 
 ## Environment Variables
 - `DATABASE_URL` - Connection string for your database
@@ -84,9 +97,9 @@ Visit [http://localhost:3001](http://localhost:3001) in your browser.
 - `NEXTAUTH_URL` - Base URL of your app (e.g., `http://localhost:3001`)
 
 ## Deployment Notes
-- For production, use a remote database (SQLite is not recommended for production on platforms like Netlify or Vercel).
+- For production, use a remote database (SQLite is not recommended for production).
 - Set all environment variables in your deployment platform's dashboard.
-- See the Netlify or Vercel documentation for Next.js deployment specifics.
+- Follow your chosen deployment platform's documentation for Next.js deployment specifics.
 
 ## Customization
 - Update branding, logo, and color scheme in the `/public` directory and Tailwind config.
