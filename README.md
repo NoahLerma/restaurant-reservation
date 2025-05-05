@@ -45,12 +45,15 @@ npm install -g npm@11.3.0
 #you may need to re-install npm to get updated dependencies the terminal will let you know
 npm audit fix --force
 
+# for some reason the regular install does not pickup the calendar package so it will have to be installed seperatly
+npm install react-calendar
 ```
 
 ### 3. Set Up Environment Variables
 Create a `.env` file in the root directory with the following (example for SQLite):
 
-SWLite is fine for this since it will not be published to a production environment leave .env as is
+YOU MUST CREATE A .env file in the ROOT directory of your editor as git does not pull one with it.
+add the following entries to you .env shown below 
 
 ```
 DATABASE_URL="file:./prisma/dev.db"
@@ -81,6 +84,8 @@ npx prisma db seed
 ### 5. Start the Development Server
 ```bash
 npm run dev
+
+# the first loading of screens will be slow as they are still initializing. just give them time.
 ```
 Visit [http://localhost:3001](http://localhost:3001) in your browser.
 
