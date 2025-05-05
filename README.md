@@ -54,7 +54,13 @@ NEXTAUTH_URL="http://localhost:3001"
 ### 4. Set Up the Database
 Run Prisma migrations and seed the database:
 ```bash
+# Generate Prisma Client
+npx prisma generate
+
+# Create and apply migrations
 npx prisma migrate dev --name init
+
+# Seed the database with initial data
 npx prisma db seed
 ```
 - This will create the database schema and seed an admin user and sample tables.
@@ -92,4 +98,3 @@ MIT
 ---
 
 **Enjoy managing reservations at Fibonacci's Flame Grill and Tap!**
-# restaurant-reservation
