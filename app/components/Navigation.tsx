@@ -5,12 +5,36 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 
+interface UserData {
+  earnedPoints: number;
+  isAdmin: boolean;
+}
+
 export default function Navigation() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   const isActive = (path: string) => pathname === path;
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (session?.user?.email) {
+        try {
+          const response = await fetch('/api/user/profile');
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [session?.user?.email]);
 
   return (
     <nav className="bg-gradient-to-r from-amber-900 to-amber-800 text-white p-4">
@@ -54,9 +78,15 @@ export default function Navigation() {
                 <div className="h-8 w-8 rounded-full bg-amber-600 flex items-center justify-center">
                   {session.user?.name?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <span className="hidden md:inline">
-                  {session.user?.isAdmin ? 'Admin' : 'User'}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="hidden md:inline">
+                    {userData?.isAdmin ? 'Admin' : 'User'}
+                  </span>
+                  <div className="flex items-center space-x-1 bg-amber-700 px-2 py-1 rounded">
+                    <span className="text-sm">Points:</span>
+                    <span className="font-semibold">{userData?.earnedPoints || 0}</span>
+                  </div>
+                </div>
               </button>
 
               {isProfileOpen && (
@@ -68,7 +98,7 @@ export default function Navigation() {
                   >
                     Profile
                   </Link>
-                  {session.user?.isAdmin && (
+                  {userData?.isAdmin && (
                     <Link
                       href="/admin"
                       className="block px-4 py-2 text-sm hover:bg-amber-700"
@@ -90,20 +120,12 @@ export default function Navigation() {
               )}
             </div>
           ) : (
-            <>
-              <Link
-                href="/login"
-                className="hover:text-amber-200"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="bg-amber-600 hover:bg-amber-500 px-4 py-2 rounded-md"
-              >
-                Register
-              </Link>
-            </>
+            <Link
+              href="/login"
+              className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700"
+            >
+              Sign In
+            </Link>
           )}
         </div>
       </div>

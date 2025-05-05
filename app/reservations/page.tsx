@@ -10,6 +10,7 @@ export default function ReservationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showReservationForm, setShowReservationForm] = useState(true);
 
   useEffect(() => {
     fetchReservations();
@@ -17,13 +18,11 @@ export default function ReservationsPage() {
 
   const fetchReservations = async () => {
     try {
-      console.log('Fetching reservations...');
       const response = await fetch('/api/reservations');
       if (!response.ok) {
         throw new Error('Failed to fetch reservations');
       }
       const data = await response.json();
-      console.log('Fetched reservations:', data);
       setReservations(data);
     } catch (err) {
       console.error('Error fetching reservations:', err);
@@ -43,34 +42,38 @@ export default function ReservationsPage() {
         },
         body: JSON.stringify({
           ...data,
-          tableIds: [], // We'll handle table selection in a later step
-          isHighTrafficDay: false, // We'll handle high traffic days in a later step
+          isHighTrafficDay: data.isHighTrafficDay || false,
+          creditCard: data.isHighTrafficDay ? {
+            number: data.creditCard?.number || '',
+            expiryMonth: data.creditCard?.expiryMonth || '',
+            expiryYear: data.creditCard?.expiryYear || '',
+            cvv: data.creditCard?.cvv || '',
+          } : undefined,
         }),
       });
 
-      const responseData = await response.json();
-
       if (!response.ok) {
-        console.error('Error response:', responseData);
-        throw new Error(responseData.error || 'Failed to create reservation');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create reservation');
       }
 
-      console.log('Created reservation:', responseData);
-
+      const reservation = await response.json();
+      console.log('Reservation created:', reservation);
+      
       // Show success message
       setSuccess('Reservation created successfully!');
       setError('');
-
+      
       // Refresh the reservations list
       await fetchReservations();
-
+      
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess('');
       }, 3000);
-    } catch (err) {
-      console.error('Error creating reservation:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create reservation');
+    } catch (error) {
+      console.error('Error creating reservation:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create reservation');
       setSuccess('');
     }
   };

@@ -64,6 +64,7 @@ export default function AdminDashboard() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [selectedReservationIds, setSelectedReservationIds] = useState<{ [tableId: string]: string }>({});
   const [confirmingReservationIds, setConfirmingReservationIds] = useState<string[]>([]);
+  const [pointsInput, setPointsInput] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     // Check if user is admin
@@ -290,6 +291,25 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateUserPoints = async (userId: string, points: number) => {
+    try {
+      const response = await fetch('/api/admin/users/points', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, points }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update points');
+      fetchData();
+      // Clear the input after successful update
+      setPointsInput(prev => ({ ...prev, [userId]: '' }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update points');
+    }
+  };
+
   // Calendar tile content and highlight
   function tileContent({ date, view }: { date: Date; view: string }) {
     if (view !== 'month') return null;
@@ -304,7 +324,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="w-full px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         <button
@@ -576,36 +596,25 @@ export default function AdminDashboard() {
           {activeTab === 'users' && (
             <div className="p-6">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 bg-white text-gray-900">
+                <table className="w-full divide-y divide-gray-200 bg-white text-gray-900">
                   <thead className="bg-amber-100">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Phone
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Points
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[150px]">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[200px]">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[120px]">Phone</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[120px]">Role</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[100px]">Points</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[200px]">Add Points</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[100px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user) => (
                       <tr key={user.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.phone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[150px]">{user.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[200px]">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[120px]">{user.phone}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[120px]">
                           <select
                             value={user.isAdmin ? 'true' : 'false'}
                             onChange={(e) => handleUpdateUserAdminStatus(user.id, e.target.value === 'true')}
@@ -615,8 +624,36 @@ export default function AdminDashboard() {
                             <option value="false">User</option>
                           </select>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.earnedPoints}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[100px]">{user.earnedPoints}</td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[200px]">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              placeholder="Amount spent"
+                              value={pointsInput[user.id] || ''}
+                              className="block w-32 rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-gray-900"
+                              onChange={(e) => {
+                                setPointsInput(prev => ({ ...prev, [user.id]: e.target.value }));
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                const amount = parseFloat(pointsInput[user.id]);
+                                if (!isNaN(amount)) {
+                                  handleUpdateUserPoints(user.id, amount);
+                                }
+                              }}
+                              className="px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700"
+                              disabled={!pointsInput[user.id]}
+                            >
+                              Add
+                            </button>
+                            <span className="text-sm text-gray-500">($1 = 1 point)</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap min-w-[100px] text-right text-sm font-medium">
                           <button
                             onClick={() => handleDeleteUser(user.id)}
                             className="text-red-600 hover:text-red-900"

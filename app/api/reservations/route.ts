@@ -43,10 +43,28 @@ export async function POST(request: Request) {
       creditCard,
     } = await request.json();
 
+    console.log('Received reservation data:', {
+      name,
+      email,
+      phone,
+      date,
+      numberOfGuests,
+      isHighTrafficDay,
+      creditCard,
+    });
+
     // Validate required fields
     if (!name || !email || !phone || !date || !numberOfGuests) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // If it's a high-traffic day, require credit card information
+    if (isHighTrafficDay && (!creditCard || !creditCard.number || !creditCard.expiryMonth || !creditCard.expiryYear || !creditCard.cvv)) {
+      return NextResponse.json(
+        { error: 'Credit card information is required for high-traffic day reservations' },
         { status: 400 }
       );
     }
@@ -84,70 +102,68 @@ export async function POST(request: Request) {
 
     // Get the current session (if user is logged in)
     const session = await getServerSession(authOptions);
+    let userId;
 
-    // Create the reservation with proper user connection
+    if (session?.user?.email) {
+      // User is logged in, find their ID
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      if (user) {
+        userId = user.id;
+      }
+    }
+
+    // If no user is logged in or found, create a guest user
+    if (!userId) {
+      const guestUser = await prisma.user.create({
+        data: {
+          email,
+          name,
+          phone,
+          password: 'guest', // This is just a placeholder
+          isGuest: true,
+        },
+      });
+      userId = guestUser.id;
+    }
+
+    // Create the reservation
     const reservation = await prisma.reservation.create({
       data: {
         date: new Date(date),
         numberOfGuests,
         status: 'PENDING',
+        tableId: availableTable.id,
+        userId,
         holdingFeeStatus: isHighTrafficDay ? 'REQUIRED' : 'NOT_REQUIRED',
-        user: {
-          connectOrCreate: {
-            where: {
-              email: session?.user?.email || email,
-            },
-            create: {
-              email,
-              name,
-              phone,
-              isGuest: !session,
-              password: '', // Empty password for guest users
-            },
-          },
-        },
-        table: {
-          connect: {
-            id: availableTable.id,
-          },
-        },
-        ...(isHighTrafficDay && creditCard
-          ? {
-              creditCard: {
-                create: {
-                  lastFourDigits: creditCard.lastFourDigits,
-                  expiryMonth: creditCard.expiryMonth,
-                  expiryYear: creditCard.expiryYear,
-                },
-              },
-            }
-          : {}),
+        creditCard: isHighTrafficDay ? {
+          create: {
+            lastFourDigits: creditCard.number.slice(-4),
+            expiryMonth: parseInt(creditCard.expiryMonth),
+            expiryYear: parseInt(creditCard.expiryYear),
+          }
+        } : undefined,
       },
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
         table: true,
+        user: true,
         creditCard: true,
       },
     });
 
-    // TODO: Send confirmation email
-    // TODO: If high traffic day, process holding fee
+    // If it's a high-traffic day, process the holding fee
+    if (isHighTrafficDay) {
+      // Here you would integrate with your payment processor
+      // For now, we'll just log it
+      console.log(`Processing $10 holding fee for reservation ${reservation.id}`);
+      // TODO: Integrate with payment processor
+    }
 
     return NextResponse.json(reservation);
   } catch (error) {
     console.error('Error creating reservation:', error);
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
     return NextResponse.json(
       { error: 'Failed to create reservation' },
       { status: 500 }
