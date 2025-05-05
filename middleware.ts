@@ -13,6 +13,7 @@ export default withAuth(
     console.log('MIDDLEWARE: Running for', request.nextUrl.pathname);
     const token = await getToken({ req: request });
     console.log('MIDDLEWARE: Token for', request.nextUrl.pathname, ':', token);
+    
     // List of paths that don't require authentication
     const publicPaths = [
       '/',
@@ -20,6 +21,7 @@ export default withAuth(
       '/register',
       '/api/auth',
       '/api/reservations',
+      '/reservations',
     ];
 
     // Check if the path is public
@@ -32,8 +34,7 @@ export default withAuth(
     }
 
     // For protected routes that require authentication
-    if (request.nextUrl.pathname.startsWith('/profile') || 
-        request.nextUrl.pathname.startsWith('/reservations')) {
+    if (request.nextUrl.pathname.startsWith('/profile')) {
       if (!token) {
         return NextResponse.redirect(new URL('/login', request.url));
       }
@@ -80,7 +81,12 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        // Allow access to public paths without a token
+        const publicPaths = ['/', '/login', '/register', '/api/auth', '/api/reservations', '/reservations'];
+        const isPublicPath = publicPaths.some(path => req.nextUrl.pathname.startsWith(path));
+        return isPublicPath || !!token;
+      },
     },
   }
 );
@@ -88,14 +94,11 @@ export default withAuth(
 export const config = {
   matcher: [
     '/api/auth/:path*',
-    '/api/reservations/:path*',
     '/api/admin/:path*',
     '/api/user/:path*',
     '/admin',
     '/admin/:path*',
     '/profile',
     '/profile/:path*',
-    '/reservations',
-    '/reservations/:path*',
   ],
 }; 

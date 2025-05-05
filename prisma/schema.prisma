@@ -10,22 +10,24 @@ generator client {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  password     String
-  name         String
-  phone        String
-  isGuest      Boolean       @default(false)
-  earnedPoints Int          @default(0)
-  isAdmin      Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  reservations Reservation[]
-  mailingAddress Address?    @relation("MailingAddress")
-  billingAddress Address?    @relation("BillingAddress")
+  id              String         @id @default(cuid())
+  email           String         @unique
+  name            String
+  phone           String
+  password        String?
+  isGuest         Boolean        @default(false)
+  earnedPoints    Int           @default(0)
+  isAdmin         Boolean       @default(false)
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  reservations    Reservation[]
+  mailingAddress  Address?       @relation("MailingAddress")
+  billingAddress  Address?       @relation("BillingAddress")
   // NextAuth.js fields
-  accounts     Account[]
-  sessions     Session[]
+  accounts        Account[]
+  sessions        Session[]
 }
 
 // NextAuth.js models

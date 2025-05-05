@@ -21,16 +21,14 @@ async function testApi() {
         },
       },
       include: {
-        tables: true,
+        table: true,
       },
     });
 
     console.log('Reservations for date:', reservations);
 
     const reservedTableIds = new Set(
-      reservations.flatMap(reservation => 
-        reservation.tables.map(table => table.id)
-      )
+      reservations.map(reservation => reservation.table.id)
     );
 
     const availableTables = tables.filter(table => 

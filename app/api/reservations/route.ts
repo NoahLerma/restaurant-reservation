@@ -3,9 +3,17 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
+    console.log('Fetching reservations...');
     const reservations = await prisma.reservation.findMany({
+      where: {
+        status: {
+          in: ['PENDING', 'CONFIRMED']
+        }
+      },
       include: {
         user: {
           select: {
@@ -21,6 +29,7 @@ export async function GET() {
       },
     });
 
+    console.log('Found reservations:', reservations);
     return NextResponse.json(reservations);
   } catch (error) {
     console.error('Error fetching reservations:', error);

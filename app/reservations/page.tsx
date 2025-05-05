@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import ReservationForm from '../components/ReservationForm';
 import { ReservationData } from '../components/ReservationForm';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 export default function ReservationsPage() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showReservationForm, setShowReservationForm] = useState(true);
+  const { data: session } = useSession();
 
   useEffect(() => {
     fetchReservations();
@@ -18,12 +19,23 @@ export default function ReservationsPage() {
 
   const fetchReservations = async () => {
     try {
-      const response = await fetch('/api/reservations');
+      console.log('Fetching reservations...');
+      const response = await fetch('/api/reservations', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch reservations');
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
       const data = await response.json();
+      console.log('Received reservations:', data);
       setReservations(data);
+      setError('');
     } catch (err) {
       console.error('Error fetching reservations:', err);
       setError('Failed to load reservations');
@@ -83,12 +95,22 @@ export default function ReservationsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Reservations</h1>
-          <Link 
-            href="/"
-            className="text-amber-600 hover:text-amber-700 font-medium"
-          >
-            Back to Home
-          </Link>
+          <div className="flex gap-4">
+            <Link 
+              href="/"
+              className="text-amber-600 hover:text-amber-700 font-medium"
+            >
+              Back to Home
+            </Link>
+            {!session && (
+              <Link 
+                href="/login"
+                className="text-amber-600 hover:text-amber-700 font-medium"
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -107,7 +129,7 @@ export default function ReservationsPage() {
           <div>
             <h2 className="text-xl font-semibold mb-4">Make a Reservation</h2>
             <ReservationForm 
-              isLoggedIn={false} 
+              isLoggedIn={!!session} 
               onSubmit={handleReservationSubmit} 
             />
           </div>
