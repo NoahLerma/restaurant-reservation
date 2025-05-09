@@ -126,16 +126,25 @@ export async function POST(request: Request) {
 
     // If no user is logged in or found, create a guest user
     if (!userId) {
-      const guestUser = await prisma.user.create({
-        data: {
-          email,
-          name,
-          phone,
-          password: 'guest', // This is just a placeholder
-          isGuest: true,
-        },
+      // First check if a user with this email already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
       });
-      userId = guestUser.id;
+
+      if (existingUser) {
+        userId = existingUser.id;
+      } else {
+        const guestUser = await prisma.user.create({
+          data: {
+            email,
+            name,
+            phone,
+            password: 'guest', // This is just a placeholder
+            isGuest: true,
+          },
+        });
+        userId = guestUser.id;
+      }
     }
 
     // Create the reservation
